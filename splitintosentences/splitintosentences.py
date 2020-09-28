@@ -7,6 +7,9 @@ from apache_beam.options.pipeline_options import SetupOptions
 
 class GenerateIdForSentence(beam.DoFn):
 
+    def to_runner_api_parameter(self, unused_context):
+        pass
+
     def process(self, element, **kwargs):
         return [{
             'id': str(uuid.uuid4()),
@@ -57,7 +60,10 @@ def run():
      | 'Filter out empty strings' >> beam.Filter(is_not_empty)
      | 'Filter out numbers' >> beam.Filter(contains_only_numbers)
      | 'ID Generation' >> beam.ParDo(GenerateIdForSentence())
-     | 'Write to BigQuery' >> beam.io.WriteToBigQuery(table_spec, schema=table_schema)
+     | 'Write to BigQuery' >> beam.io.WriteToBigQuery(table_spec,
+                                                      schema=table_schema,
+                                                      create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+                                                      write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND)
      )
     p.run()
 
